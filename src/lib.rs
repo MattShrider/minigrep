@@ -11,11 +11,28 @@ pub enum MinigrepError {
 
 #[derive(Debug)]
 pub struct SearchMatch {
+    pub filename: String,
     pub line_num: usize,
     pub line_content: String,
 }
 
-pub fn run(filename: &String, search: &String) -> Result<Vec<SearchMatch>, MinigrepError> {
+pub fn run(files: &[String], search: &String) -> Result<Vec<SearchMatch>, MinigrepError> {
+    files
+        .iter()
+        // .map(|filename| run_file(filename, search))
+        .try_fold(
+            vec![],
+            |mut acc: Vec<SearchMatch>, filename| match run_file(filename, search) {
+                Ok(mut results) => {
+                    acc.append(&mut results);
+                    Ok(acc)
+                }
+                Err(why) => Err(why),
+            },
+        )
+}
+
+fn run_file(filename: &String, search: &String) -> Result<Vec<SearchMatch>, MinigrepError> {
     let file = open_file(filename)?;
     let reader = BufReader::new(file);
 
@@ -26,6 +43,7 @@ pub fn run(filename: &String, search: &String) -> Result<Vec<SearchMatch>, Minig
             Ok(found) => {
                 if found.to_lowercase().contains(&search.to_lowercase()) {
                     Some(SearchMatch {
+                        filename: filename.clone(),
                         line_num: idx,
                         line_content: found,
                     })
