@@ -17,19 +17,16 @@ pub struct SearchMatch {
 }
 
 pub fn run(files: &[String], search: &String) -> Result<Vec<SearchMatch>, MinigrepError> {
-    files
-        .iter()
-        // .map(|filename| run_file(filename, search))
-        .try_fold(
-            vec![],
-            |mut acc: Vec<SearchMatch>, filename| match run_file(filename, search) {
-                Ok(mut results) => {
-                    acc.append(&mut results);
-                    Ok(acc)
-                }
-                Err(why) => Err(why),
-            },
-        )
+    files.iter().try_fold(
+        vec![],
+        |mut acc: Vec<SearchMatch>, filename| match run_file(filename, search) {
+            Ok(mut results) => {
+                acc.append(&mut results);
+                Ok(acc)
+            }
+            Err(why) => Err(why),
+        },
+    )
 }
 
 fn run_file(filename: &String, search: &String) -> Result<Vec<SearchMatch>, MinigrepError> {
